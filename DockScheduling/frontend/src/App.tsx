@@ -363,7 +363,7 @@ function App() {
             
             <div className="flex-1 overflow-y-auto pr-1">
               <div className="grid grid-cols-7 gap-1 md:gap-2">
-                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d, i) => (
+                {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(d => (
                   <div key={d} className="text-center font-bold text-gray-500 uppercase text-[10px] md:text-sm tracking-wider pb-2 border-b">
                     <span className="hidden lg:inline">{d}</span>
                     <span className="hidden sm:inline lg:hidden">{d.substring(0, 3)}</span>
