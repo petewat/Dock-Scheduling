@@ -167,7 +167,7 @@ export function CalendarView({
             <div className="flex items-center gap-1.5 bg-gray-50 py-1 px-2 rounded border border-gray-200 shadow-sm flex-1 xl:flex-none justify-center">
               <label className="text-xs font-bold text-gray-700 whitespace-nowrap">Size:</label>
               <div className="relative flex items-center w-full max-w-[100px] xl:w-20">
-                <input type="number" value={filterLength} onChange={(e) => onFilterLengthChange(e.target.value)} placeholder="Any" className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white" />
+                <input type="number" min="1" value={filterLength} onChange={(e) => { const val = e.target.value; if (val === '' || Number(val) > 0) onFilterLengthChange(val); }} placeholder="Any" className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white" />
                 <span className="absolute right-1.5 text-[10px] text-gray-400 font-bold">ft</span>
               </div>
             </div>

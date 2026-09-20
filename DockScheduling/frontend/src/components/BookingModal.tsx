@@ -179,9 +179,11 @@ export function BookingModal({
                 <label className="block text-sm text-gray-600 mb-1">Length (ft) <span className="text-red-500">*</span></label>
                 <input
                   type="number"
+                  min="1"
                   value={vesselLength}
                   onChange={(e) => {
-                    setVesselLength(e.target.value);
+                    const val = e.target.value;
+                    if (val === '' || Number(val) > 0) setVesselLength(val);
                   }}
                   className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500"
                   placeholder="100"
