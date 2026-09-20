@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Berth, Booking } from '../types';
 
 interface BookingModalProps {
@@ -40,7 +40,7 @@ export function BookingModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Compute validBerths internally based on the local vesselLength state
-  const validBerths = (() => {
+  const validBerths = useMemo(() => {
     const requiredLength = (!isEvent && vesselLength && parseInt(vesselLength) > 0) 
       ? parseInt(vesselLength) + BUFFER_FT 
       : 0;
@@ -54,7 +54,7 @@ export function BookingModal({
       );
     });
     return valid.sort((a, b) => a.length - b.length);
-  })();
+  }, [isEvent, vesselLength, berths, bookings, startDate, endDate]);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -70,24 +70,25 @@ export function BookingModal({
       setExtraNote('');
       if (filterBerthId) {
         setSelectedBerth(filterBerthId);
-      } else {
-        // We defer to the next effect to pick the best berth once validBerths runs
-        setSelectedBerth('');
       }
     }
   }, [isOpen, filterLength, filterBerthId]);
 
-  // Keep selected berth valid when validBerths changes
+  // Auto-select the optimal berth whenever the mathematical parameters change
   useEffect(() => {
+    // Only snap to the new optimal if we are actively setting properties,
+    // or if the currently selected berth is completely invalid.
     if (validBerths.length > 0) {
-      const isCurrentValid = validBerths.find(b => b.id === selectedBerth);
-      if (!isCurrentValid) {
+      // If the user already has filterBerthId set and it matches, keep it. 
+      // Otherwise, snap to the optimal fit.
+      const shouldKeepFilter = filterBerthId && validBerths.find(b => b.id === filterBerthId) && selectedBerth === filterBerthId;
+      if (!shouldKeepFilter) {
         setSelectedBerth(validBerths[0].id);
       }
     } else {
       setSelectedBerth('');
     }
-  }, [vesselLength, isEvent, startDate, endDate, selectedBerth, validBerths]);
+  }, [validBerths, filterBerthId]);
 
   if (!isOpen) return null;
 
