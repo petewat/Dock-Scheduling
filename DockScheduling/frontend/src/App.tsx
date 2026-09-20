@@ -176,26 +176,6 @@ function App() {
             )}
           </div>
 
-          <div className="mb-4 flex flex-col items-center xl:items-end w-full relative flex-shrink-0">
-             <div className="flex items-center justify-center gap-2 sm:gap-3 w-full xl:w-auto">
-                <div className="flex items-center gap-1.5 bg-gray-50 py-1 px-2 rounded border border-gray-200 shadow-sm">
-                  <label className="text-xs font-bold text-gray-700 whitespace-nowrap">Berth:</label>
-                  <select value={filterBerthId} onChange={(e) => setFilterBerthId(e.target.value)} className="border border-gray-300 rounded py-0.5 px-1 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white">
-                    <option value="">Any</option>
-                    {BERTHS.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-1.5 bg-gray-50 py-1 px-2 rounded border border-gray-200 shadow-sm">
-                  <label className="text-xs font-bold text-gray-700 whitespace-nowrap">Size:</label>
-                  <div className="relative flex items-center w-20">
-                    <input type="number" value={filterLength} onChange={(e) => setFilterLength(e.target.value)} placeholder="Any" className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white" />
-                    <span className="absolute right-1.5 text-[10px] text-gray-400 font-bold">ft</span>
-                  </div>
-                </div>
-              </div>
-          </div>
-
           {activeBerths.length === 0 && (
             <div className="bg-red-50 text-red-700 p-4 rounded-lg text-center mb-6 border border-red-200 font-semibold text-sm">
               No berths match your current filters!
@@ -210,6 +190,11 @@ function App() {
             onDayClick={handleDayClick}
             onHoverDay={setHoverDay}
             todayString={todayString}
+            berths={BERTHS}
+            filterBerthId={filterBerthId}
+            onFilterBerthIdChange={setFilterBerthId}
+            filterLength={filterLength}
+            onFilterLengthChange={setFilterLength}
           />
         </div>
 

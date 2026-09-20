@@ -11,6 +11,11 @@ interface CalendarViewProps {
   onDayClick: (dateStr: string) => void;
   onHoverDay: (dateStr: string) => void;
   todayString: string;
+  berths: Berth[];
+  filterBerthId: string;
+  onFilterBerthIdChange: (val: string) => void;
+  filterLength: string;
+  onFilterLengthChange: (val: string) => void;
 }
 
 export function CalendarView({
@@ -20,7 +25,12 @@ export function CalendarView({
   hoverDay,
   onDayClick,
   onHoverDay,
-  todayString
+  todayString,
+  berths,
+  filterBerthId,
+  onFilterBerthIdChange,
+  filterLength,
+  onFilterLengthChange
 }: CalendarViewProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -51,6 +61,8 @@ export function CalendarView({
   return (
     <div className="bg-white border rounded shadow p-3 md:p-6 h-fit overflow-hidden flex flex-col flex-1">
       <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
+        
+        {/* Calendar Navigation */}
         <div className="flex items-center justify-between w-full xl:w-auto gap-2 sm:gap-4 relative">
           <button onClick={prevMonth} className="px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm font-medium">
             &lt; Prev
@@ -137,6 +149,31 @@ export function CalendarView({
             Next &gt;
           </button>
         </div>
+
+        {/* Filters */}
+        <div className="flex flex-col items-center xl:items-end w-full xl:w-auto relative mt-4 xl:mt-0 flex-shrink-0">
+          <span className="text-[10px] sm:text-xs text-gray-500 font-medium italic mb-1 xl:absolute xl:-top-6 xl:right-1 xl:mb-0">
+            Use these options to filter:
+          </span>
+          <div className="flex items-center justify-center gap-2 sm:gap-3 w-full xl:w-auto">
+            <div className="flex items-center gap-1.5 bg-gray-50 py-1 px-2 rounded border border-gray-200 shadow-sm flex-1 xl:flex-none justify-center">
+              <label className="text-xs font-bold text-gray-700 whitespace-nowrap">Berth:</label>
+              <select value={filterBerthId} onChange={(e) => onFilterBerthIdChange(e.target.value)} className="border border-gray-300 rounded py-0.5 px-1 focus:ring-1 focus:ring-blue-500 text-xs font-medium w-full max-w-[140px] xl:w-36 bg-white">
+                <option value="">Any</option>
+                {berths.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-gray-50 py-1 px-2 rounded border border-gray-200 shadow-sm flex-1 xl:flex-none justify-center">
+              <label className="text-xs font-bold text-gray-700 whitespace-nowrap">Size:</label>
+              <div className="relative flex items-center w-full max-w-[100px] xl:w-20">
+                <input type="number" value={filterLength} onChange={(e) => onFilterLengthChange(e.target.value)} placeholder="Any" className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white" />
+                <span className="absolute right-1.5 text-[10px] text-gray-400 font-bold">ft</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <div className="flex-1 overflow-y-auto pr-1">
