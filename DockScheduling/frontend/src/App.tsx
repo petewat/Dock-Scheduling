@@ -618,11 +618,13 @@ function App() {
 
       {/* Booking Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Create New Booking</h2>
-
-            <div className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 sm:p-6 z-50 animate-fade-in">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col">
+            <div className="p-4 sm:p-6 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-bold">Create New Booking</h2>
+            </div>
+            
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
 
               {/* Booking Type Toggle */}
               <div className="flex bg-gray-100 p-1 rounded-md border border-gray-200">
@@ -743,10 +745,11 @@ function App() {
                   </>
                 )}
               </div>
+            </div>
 
-              <div className="pt-2 sm:pt-4 flex justify-end gap-2">
-                <button
-                  onClick={() => setShowModal(false)}
+            <div className="p-4 sm:p-6 border-t border-gray-100 flex justify-end gap-2 flex-shrink-0 bg-gray-50 rounded-b-lg">
+              <button
+                onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm sm:text-base text-gray-600 hover:bg-gray-100 rounded"
                 >
                   Cancel
