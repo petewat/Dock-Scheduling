@@ -15,7 +15,7 @@ const MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "Ju
 function App() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [showModal, setShowModal] = useState(false);
-  
+
   const fetchBookings = async () => {
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -51,7 +51,7 @@ function App() {
   // Interactive Selection State
   const [selectionStart, setSelectionStart] = useState<string | null>(null);
   const [hoverDay, setHoverDay] = useState<string | null>(null);
-  
+
   // Global Filter State
   const [filterLength, setFilterLength] = useState<string>('');
   const [filterBerthId, setFilterBerthId] = useState<string>('');
@@ -79,19 +79,19 @@ function App() {
       setHoverDay(dateStr);
     } else {
       const dates = [selectionStart, dateStr].sort();
-      
+
       setStartDate(dates[0]);
       setEndDate(dates[1]);
-      
+
       setVesselName('');
       setVesselLength(filterLength);
       setIsEvent(false);
-      
+
       if (filterBerthId) setSelectedBerth(filterBerthId);
       else setSelectedBerth('');
-      
+
       setShowModal(true);
-      
+
       setSelectionStart(null);
       setHoverDay(null);
     }
@@ -132,9 +132,9 @@ function App() {
 
     const valid = BERTHS.filter(berth => {
       if (berth.length < requiredLength) return false;
-      const hasConflict = bookings.some(b => 
-        b.berthId === berth.id && 
-        b.startDate <= endDate && 
+      const hasConflict = bookings.some(b =>
+        b.berthId === berth.id &&
+        b.startDate <= endDate &&
         b.endDate >= startDate
       );
       return !hasConflict;
@@ -156,7 +156,7 @@ function App() {
 
   const handleLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVesselLength(e.target.value);
-    setSelectedBerth(''); 
+    setSelectedBerth('');
   };
 
   const getHeatmapClass = (occupiedCount: number, totalActiveBerths: number) => {
@@ -164,12 +164,41 @@ function App() {
     if (occupiedCount === 0) return 'bg-green-100 border-green-200 hover:bg-green-200';
     
     const ratio = occupiedCount / totalActiveBerths;
-    
-    if (ratio >= 1) return 'bg-red-200 border-red-300 hover:bg-red-300';
+    if (ratio >= 1) return 'bg-red-200 border-red-300 hover:bg-red-300 font-bold';
     if (ratio >= 0.75) return 'bg-red-100 border-red-200 hover:bg-red-200';
     if (ratio >= 0.5) return 'bg-orange-100 border-orange-200 hover:bg-orange-200';
     if (ratio >= 0.25) return 'bg-yellow-100 border-yellow-200 hover:bg-yellow-200';
     return 'bg-green-50 border-green-100 hover:bg-green-100';
+  };
+
+  // --- Unavailable Berths during Pending Selection ---
+  const pendingUnavailableBerthIds = (() => {
+    if (!selectionStart || !hoverDay) return [];
+    
+    // Ignore past days selection bounds
+    if (hoverDay < todayString) return [];
+
+    const rangeMin = selectionStart < hoverDay ? selectionStart : hoverDay;
+    const rangeMax = selectionStart > hoverDay ? selectionStart : hoverDay;
+    
+    return BERTHS.filter(berth => {
+      const hasConflict = bookings.some(b => 
+        b.berthId === berth.id && 
+        b.startDate <= rangeMax && 
+        b.endDate >= rangeMin
+      );
+      return hasConflict;
+    }).map(b => b.id);
+  })();
+
+  const getMapBerthClass = (berthId: string, defaultClass: string, hoverClass: string) => {
+    if (selectionStart && pendingUnavailableBerthIds.includes(berthId)) {
+      return 'bg-gray-200 text-gray-400 border-gray-300 opacity-70 cursor-not-allowed striped-bg';
+    }
+    if (hoveredBerthId === berthId) {
+      return hoverClass;
+    }
+    return defaultClass;
   };
 
   return (
@@ -182,31 +211,29 @@ function App() {
 
       {/* Main Layout Area - Split on Large Screens */}
       <main className="flex-1 p-2 md:p-6 lg:p-8 flex flex-col xl:flex-row gap-6 w-full max-w-[2000px] mx-auto">
-        
+
         {/* Left Column: Calendar (Wider) */}
         <div className="w-full xl:w-[65%] 2xl:w-[70%] flex flex-col mx-auto xl:mx-0">
-          
-          <div className={`border p-3 md:px-4 md:py-3 rounded-lg mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm transition-colors duration-300 flex-shrink-0 ${
-            selectionStart === null 
-              ? 'bg-white border-gray-300 text-gray-700' 
-              : 'bg-blue-100 border-blue-300 text-blue-900'
-          }`}>
+
+          <div className={`border p-3 md:px-4 md:py-3 rounded-lg mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-sm transition-colors duration-300 flex-shrink-0 ${selectionStart === null
+            ? 'bg-white border-gray-300 text-gray-700'
+            : 'bg-blue-100 border-blue-300 text-blue-900'
+            }`}>
             <div className="flex items-start sm:items-center gap-3">
-              <div className={`rounded-full w-6 h-6 flex-shrink-0 flex items-center justify-center font-bold text-sm mt-0.5 sm:mt-0 ${
-                selectionStart === null ? 'bg-gray-500 text-white' : 'bg-blue-600 text-white'
-              }`}>
+              <div className={`rounded-full w-6 h-6 flex-shrink-0 flex items-center justify-center font-bold text-sm mt-0.5 sm:mt-0 ${selectionStart === null ? 'bg-gray-500 text-white' : 'bg-blue-600 text-white'
+                }`}>
                 {selectionStart === null ? '1' : '2'}
               </div>
               <span className="text-sm md:text-base">
-                {selectionStart === null 
+                {selectionStart === null
                   ? <span>Select a <strong>Start Date</strong> on the calendar to begin a new booking.</span>
                   : <span>Select an <strong>End Date</strong> to complete your booking window.</span>
                 }
               </span>
             </div>
-            
+
             {selectionStart !== null && (
-              <button 
+              <button
                 onClick={handleCancelSelection}
                 className="w-full sm:w-auto bg-white border border-blue-300 text-blue-700 px-4 py-1.5 rounded hover:bg-blue-50 hover:text-blue-900 font-semibold transition-colors shadow-sm text-sm"
               >
@@ -216,18 +243,18 @@ function App() {
           </div>
 
           <div className="bg-white border rounded shadow p-3 md:p-6 h-fit overflow-hidden flex flex-col flex-1">
-            
+
             {/* Header & Filter Bar */}
             <div className="flex flex-col xl:flex-row justify-between items-center gap-4 mb-6 pb-4 border-b border-gray-100 flex-shrink-0">
-              
+
               {/* Calendar Controls with Date Picker Popover */}
               <div className="flex items-center justify-between w-full xl:w-auto gap-2 sm:gap-4 relative">
                 <button onClick={prevMonth} className="px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm text-gray-600 bg-gray-50 border border-gray-200 rounded hover:bg-blue-50 hover:text-blue-600 transition-colors shadow-sm font-medium">
                   &lt; Prev
                 </button>
-                
+
                 <div className="relative">
-                  <h2 
+                  <h2
                     className="text-lg sm:text-2xl font-bold text-gray-800 min-w-[140px] sm:w-64 text-center cursor-pointer hover:text-blue-600 transition-colors rounded hover:bg-gray-50 p-1 whitespace-nowrap"
                     onClick={() => {
                       setTempYear(year);
@@ -237,45 +264,44 @@ function App() {
                   >
                     {MONTH_NAMES[month]} <span className="hidden sm:inline">{year}</span><span className="sm:hidden">'{year.toString().slice(2)}</span>
                   </h2>
-                  
+
                   {/* Date Picker Popover */}
                   {showDatePicker && (
                     <>
                       {/* Invisible overlay to close popover when clicking outside */}
                       <div className="fixed inset-0 z-40" onClick={() => setShowDatePicker(false)}></div>
-                      
+
                       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded shadow-xl border border-gray-200 z-50 w-64 overflow-hidden animate-fade-in">
                         {/* Tabs */}
                         <div className="flex border-b bg-gray-50">
-                          <button 
+                          <button
                             className={`flex-1 py-2 text-sm font-semibold transition-colors ${datePickerView === 'month' ? 'border-b-2 border-blue-600 text-blue-700 bg-white' : 'text-gray-500 hover:text-gray-700'}`}
                             onClick={() => setDatePickerView('month')}
                           >
                             Month
                           </button>
-                          <button 
+                          <button
                             className={`flex-1 py-2 text-sm font-semibold transition-colors ${datePickerView === 'year' ? 'border-b-2 border-blue-600 text-blue-700 bg-white' : 'text-gray-500 hover:text-gray-700'}`}
                             onClick={() => setDatePickerView('year')}
                           >
                             Year ({tempYear})
                           </button>
                         </div>
-                        
+
                         <div className="p-3">
                           {datePickerView === 'month' && (
                             <div className="grid grid-cols-3 gap-2">
                               {MONTH_NAMES.map((m, i) => (
-                                <button 
+                                <button
                                   key={m}
                                   onClick={() => {
                                     setCurrentDate(new Date(tempYear, i, 1));
                                     setShowDatePicker(false);
                                   }}
-                                  className={`py-2 px-1 text-sm rounded transition-colors ${
-                                    i === month && tempYear === year
-                                      ? 'bg-blue-600 text-white font-bold'
-                                      : 'hover:bg-blue-50 text-gray-700 font-medium'
-                                  }`}
+                                  className={`py-2 px-1 text-sm rounded transition-colors ${i === month && tempYear === year
+                                    ? 'bg-blue-600 text-white font-bold'
+                                    : 'hover:bg-blue-50 text-gray-700 font-medium'
+                                    }`}
                                 >
                                   {m.substring(0, 3)}
                                 </button>
@@ -285,18 +311,17 @@ function App() {
 
                           {datePickerView === 'year' && (
                             <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto pr-1">
-                              {Array.from({length: 20}, (_, i) => 2020 + i).map(y => (
+                              {Array.from({ length: 20 }, (_, i) => 2020 + i).map(y => (
                                 <button
                                   key={y}
                                   onClick={() => {
                                     setTempYear(y);
                                     setDatePickerView('month');
                                   }}
-                                  className={`py-2 px-1 text-sm rounded transition-colors ${
-                                    y === tempYear
-                                      ? 'bg-blue-100 text-blue-700 font-bold border border-blue-300'
-                                      : 'hover:bg-blue-50 text-gray-700'
-                                  }`}
+                                  className={`py-2 px-1 text-sm rounded transition-colors ${y === tempYear
+                                    ? 'bg-blue-100 text-blue-700 font-bold border border-blue-300'
+                                    : 'hover:bg-blue-50 text-gray-700'
+                                    }`}
                                 >
                                   {y}
                                 </button>
@@ -324,7 +349,7 @@ function App() {
                     <label className="text-xs font-bold text-gray-700 whitespace-nowrap">
                       Berth:
                     </label>
-                    <select 
+                    <select
                       value={filterBerthId}
                       onChange={(e) => setFilterBerthId(e.target.value)}
                       className="border border-gray-300 rounded py-0.5 px-1 focus:ring-1 focus:ring-blue-500 text-xs font-medium w-full max-w-[140px] xl:w-36 bg-white"
@@ -341,12 +366,12 @@ function App() {
                       Size:
                     </label>
                     <div className="relative flex items-center w-full max-w-[100px] xl:w-20">
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={filterLength}
                         onChange={(e) => setFilterLength(e.target.value)}
                         placeholder="Any"
-                        className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white" 
+                        className="w-full border border-gray-300 rounded py-0.5 px-2 pr-5 focus:ring-1 focus:ring-blue-500 text-xs font-medium bg-white"
                       />
                       <span className="absolute right-1.5 text-[10px] text-gray-400 font-bold">ft</span>
                     </div>
@@ -360,7 +385,7 @@ function App() {
                 No berths match your current filters!
               </div>
             )}
-            
+
             <div className="flex-1 overflow-y-auto pr-1">
               <div className="grid grid-cols-7 gap-1 md:gap-2">
                 {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(d => (
@@ -379,21 +404,21 @@ function App() {
                   const dateString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   const isPast = dateString < todayString;
                   const isStartSelection = selectionStart === dateString;
-                  
+
                   let isHoverRange = false;
                   if (selectionStart !== null && hoverDay !== null && !isStartSelection && !isPast) {
                     const min = selectionStart < hoverDay ? selectionStart : hoverDay;
                     const max = selectionStart > hoverDay ? selectionStart : hoverDay;
                     isHoverRange = dateString >= min && dateString <= max;
                   }
-                  
-                  const daysBookings = bookings.filter(b => 
-                    dateString >= b.startDate && 
-                    dateString <= b.endDate && 
+
+                  const daysBookings = bookings.filter(b =>
+                    dateString >= b.startDate &&
+                    dateString <= b.endDate &&
                     activeBerthIds.includes(b.berthId)
                   );
                   const occupiedCount = daysBookings.length;
-                  
+
                   let cellBackgroundClass = '';
                   if (isPast) {
                     cellBackgroundClass = 'bg-gray-100 border-gray-200 opacity-60';
@@ -406,8 +431,8 @@ function App() {
                   }
 
                   return (
-                    <div 
-                      key={day} 
+                    <div
+                      key={day}
                       onClick={() => {
                         if (activeBerths.length > 0 && !isPast) handleDayClick(dateString);
                       }}
@@ -420,18 +445,16 @@ function App() {
                         ${cellBackgroundClass}
                       `}
                     >
-                      <span className={`font-semibold text-xs md:text-base ${
-                        isPast ? 'text-gray-400' : 
+                      <span className={`font-semibold text-xs md:text-base ${isPast ? 'text-gray-400' :
                         isStartSelection || isHoverRange ? 'text-blue-900' : 'text-gray-800'
-                      }`}>
+                        }`}>
                         {day}
                       </span>
-                      
+
                       <div className="flex-1 overflow-y-auto min-h-0 mt-1 space-y-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {daysBookings.map(b => (
-                          <div key={b.id} className={`text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate shadow-sm font-medium leading-tight ${
-                            isPast ? 'bg-gray-200 text-gray-500 opacity-70' : 'bg-white bg-opacity-80 text-gray-800'
-                          }`}>
+                          <div key={b.id} className={`text-[8px] sm:text-[10px] px-1 py-0.5 rounded truncate shadow-sm font-medium leading-tight ${isPast ? 'bg-gray-200 text-gray-500 opacity-70' : 'bg-white bg-opacity-80 text-gray-800'
+                            }`}>
                             {b.vesselName}
                           </div>
                         ))}
@@ -447,7 +470,7 @@ function App() {
         {/* Right Column: Interactive Map */}
         <div className="w-full xl:w-[35%] 2xl:w-[30%] flex flex-col mx-auto xl:mx-0 min-w-[300px] mb-8 xl:mb-0 relative z-20">
           <div ref={mapRef} className="bg-white border rounded shadow p-4 md:p-6 flex-1 flex flex-col relative min-h-[550px] sm:min-h-[600px] xl:min-h-[650px]">
-            
+
             <div className="mb-4 flex-shrink-0">
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
@@ -458,12 +481,12 @@ function App() {
 
             {/* Floating Tooltip (Moved OUTSIDE the overflow-hidden map area) */}
             {hoveredBerthId && (
-              <div 
+              <div
                 className="absolute z-50 bg-gray-900 text-white p-3 rounded-lg shadow-2xl w-48 pointer-events-none transform -translate-x-1/2 -translate-y-[calc(100%+12px)] transition-opacity duration-150 border border-gray-700"
                 style={{ left: tooltipPos.x, top: tooltipPos.y }}
               >
                 <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-gray-900 rotate-45 border-r border-b border-gray-700"></div>
-                
+
                 <h4 className="font-bold text-sm border-b border-gray-700 pb-1.5 mb-2 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-sm ${BERTHS.find(b => b.id === hoveredBerthId)?.colorClass}`}></span>
@@ -492,7 +515,7 @@ function App() {
             )}
 
             {/* Abstract CSS Map */}
-            <div 
+            <div
               className="flex-1 bg-blue-50 border-2 border-blue-200 rounded-lg relative overflow-hidden flex shadow-inner cursor-default"
               onMouseLeave={() => setHoveredBerthId(null)}
             >
@@ -500,7 +523,7 @@ function App() {
               <div className="w-12 h-full absolute left-0 top-0 bg-stone-300 border-r-[3px] border-stone-400 z-0"></div>
 
               {/* Map Structures */}
-              
+
               {/* North Pier (NPW, NPE, Face) */}
               <div 
                 onMouseLeave={() => setHoveredBerthId(null)}
@@ -509,21 +532,21 @@ function App() {
                 <div 
                   onMouseMove={(e) => handleMapMouseMove(e, '1')}
                   className={`h-full w-[55%] border-y-2 border-r rounded-r-none flex items-center justify-center text-[10px] font-bold transition-all cursor-crosshair
-                    ${hoveredBerthId === '1' ? 'bg-blue-600 text-white z-10 scale-[1.02] shadow-xl border-blue-800' : 'bg-blue-700 text-blue-100 border-blue-900 hover:bg-blue-600'}`}
+                    ${getMapBerthClass('1', 'bg-blue-700 text-blue-100 border-blue-900 hover:bg-blue-600', 'bg-blue-600 text-white z-10 scale-[1.02] shadow-xl border-blue-800')}`}
                 >
                   NPW
                 </div>
                 <div 
                   onMouseMove={(e) => handleMapMouseMove(e, '2')}
                   className={`h-full w-[35%] border-y-2 border-x flex items-center justify-center text-[10px] font-bold transition-all cursor-crosshair
-                    ${hoveredBerthId === '2' ? 'bg-sky-500 text-white z-10 scale-[1.02] shadow-xl border-sky-700' : 'bg-sky-600 text-sky-100 border-sky-800 hover:bg-sky-500'}`}
+                    ${getMapBerthClass('2', 'bg-sky-600 text-sky-100 border-sky-800 hover:bg-sky-500', 'bg-sky-500 text-white z-10 scale-[1.02] shadow-xl border-sky-700')}`}
                 >
                   NPE
                 </div>
                 <div 
                   onMouseMove={(e) => handleMapMouseMove(e, '3')}
                   className={`h-full w-[10%] border-y-2 border-r-2 border-l rounded-r flex items-center justify-center text-[8px] font-bold transition-all cursor-crosshair
-                    ${hoveredBerthId === '3' ? 'bg-cyan-400 text-cyan-900 z-10 scale-[1.02] shadow-xl border-cyan-600' : 'bg-cyan-500 text-cyan-900 border-cyan-700 hover:bg-cyan-400'}`}
+                    ${getMapBerthClass('3', 'bg-cyan-500 text-cyan-900 border-cyan-700 hover:bg-cyan-400', 'bg-cyan-400 text-cyan-900 z-10 scale-[1.02] shadow-xl border-cyan-600')}`}
                   style={{ transform: hoveredBerthId === '3' ? 'scale(1.02)' : 'none', transformOrigin: 'left center' }}
                 >
                   <span style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>Face</span>
@@ -535,7 +558,7 @@ function App() {
                 onMouseMove={(e) => handleMapMouseMove(e, '6')}
                 onMouseLeave={() => setHoveredBerthId(null)}
                 className={`absolute top-[45%] left-12 h-16 w-14 border-y-2 border-r-2 rounded-r shadow-md flex items-center justify-center text-[10px] font-bold transition-all cursor-crosshair
-                  ${hoveredBerthId === '6' ? 'bg-amber-400 text-amber-900 z-10 scale-[1.02] shadow-xl border-amber-600' : 'bg-amber-500 text-amber-900 border-amber-700 hover:bg-amber-400'}`}
+                  ${getMapBerthClass('6', 'bg-amber-500 text-amber-900 border-amber-700 hover:bg-amber-400', 'bg-amber-400 text-amber-900 z-10 scale-[1.02] shadow-xl border-amber-600')}`}
               >
                 Inner
               </div>
@@ -548,19 +571,19 @@ function App() {
                 <div 
                   onMouseMove={(e) => handleMapMouseMove(e, '4')}
                   className={`h-full w-[50%] border-y-2 border-r flex items-center justify-center text-[10px] font-bold transition-all cursor-crosshair
-                    ${hoveredBerthId === '4' ? 'bg-emerald-500 text-white z-10 scale-[1.02] shadow-xl border-emerald-700' : 'bg-emerald-600 text-emerald-100 border-emerald-800 hover:bg-emerald-500'}`}
+                    ${getMapBerthClass('4', 'bg-emerald-600 text-emerald-100 border-emerald-800 hover:bg-emerald-500', 'bg-emerald-500 text-white z-10 scale-[1.02] shadow-xl border-emerald-700')}`}
                 >
                   SFW
                 </div>
                 <div 
                   onMouseMove={(e) => handleMapMouseMove(e, '5')}
                   className={`h-full w-[50%] border-y-2 border-r-2 border-l rounded-r flex items-center justify-center text-[10px] font-bold transition-all cursor-crosshair
-                    ${hoveredBerthId === '5' ? 'bg-teal-400 text-teal-900 z-10 scale-[1.02] shadow-xl border-teal-600' : 'bg-teal-500 text-teal-900 border-teal-700 hover:bg-teal-400'}`}
+                    ${getMapBerthClass('5', 'bg-teal-500 text-teal-900 border-teal-700 hover:bg-teal-400', 'bg-teal-400 text-teal-900 z-10 scale-[1.02] shadow-xl border-teal-600')}`}
                 >
                   SFE
                 </div>
               </div>
-              
+
 
             </div>
 
@@ -570,7 +593,7 @@ function App() {
               <div className="grid grid-cols-2 gap-x-2 gap-y-1.5 text-[10px] text-gray-600">
                 {BERTHS.map(b => (
                   <div key={b.id} className="flex items-center gap-1.5">
-                    <span className={`w-2.5 h-2.5 rounded-sm shadow-sm ${b.colorClass}`}></span> 
+                    <span className={`w-2.5 h-2.5 rounded-sm shadow-sm ${b.colorClass}`}></span>
                     <span className="font-semibold">{b.name}</span>
                   </div>
                 ))}
@@ -586,18 +609,18 @@ function App() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-md">
             <h2 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6">Create New Booking</h2>
-            
+
             <div className="space-y-4">
-              
+
               {/* Booking Type Toggle */}
               <div className="flex bg-gray-100 p-1 rounded-md border border-gray-200">
-                <button 
+                <button
                   onClick={() => setIsEvent(false)}
                   className={`flex-1 py-1.5 text-sm font-semibold rounded transition-colors ${!isEvent ? 'bg-white text-blue-700 shadow-sm border border-gray-200' : 'text-gray-500 hover:text-gray-700'}`}
                 >
                   Vessel
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setIsEvent(true);
                     setVesselLength('');
@@ -613,24 +636,24 @@ function App() {
                   <label className="block text-sm text-gray-600 mb-1">
                     {isEvent ? 'Event Name' : 'Vessel Name'}
                   </label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     value={vesselName}
                     onChange={(e) => setVesselName(e.target.value)}
-                    className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" 
-                    placeholder={isEvent ? "e.g. Harbor Festival" : "e.g. Sea Explorer"} 
+                    className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500"
+                    placeholder={isEvent ? "e.g. Harbor Festival" : "e.g. Sea Explorer"}
                   />
                 </div>
-                
+
                 {!isEvent && (
                   <div className="sm:w-24">
                     <label className="block text-sm text-gray-600 mb-1">Length (ft)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={vesselLength}
                       onChange={handleLengthChange}
-                      className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" 
-                      placeholder="100" 
+                      className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="100"
                     />
                   </div>
                 )}
@@ -651,14 +674,14 @@ function App() {
 
               <div className="bg-blue-50 p-3 sm:p-4 rounded border border-blue-100">
                 <label className="block text-sm text-blue-900 font-bold mb-2">Assigned Berth</label>
-                
+
                 {validBerths.length === 0 ? (
                   <div className="text-red-600 bg-red-50 p-3 rounded border border-red-200 text-sm font-semibold">
                     No berths are large enough or available for these dates!
                   </div>
                 ) : (
                   <>
-                    <select 
+                    <select
                       value={selectedBerth}
                       onChange={(e) => setSelectedBerth(e.target.value)}
                       className="w-full border-2 border-blue-300 rounded p-2 sm:p-3 bg-white focus:ring-2 focus:ring-blue-500 font-medium text-gray-800 text-sm sm:text-base"
@@ -669,22 +692,22 @@ function App() {
                         </option>
                       ))}
                     </select>
-                    
+
                     <p className="text-xs text-blue-600 mt-2">
                       System automatically selected the best fit, but you can override it above.
                     </p>
                   </>
                 )}
               </div>
-              
+
               <div className="pt-2 sm:pt-4 flex justify-end gap-2">
-                <button 
+                <button
                   onClick={() => setShowModal(false)}
                   className="px-4 py-2 text-sm sm:text-base text-gray-600 hover:bg-gray-100 rounded"
                 >
                   Cancel
                 </button>
-                <button 
+                <button
                   onClick={async () => {
                     try {
                       const payload = {
