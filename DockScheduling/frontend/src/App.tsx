@@ -142,18 +142,6 @@ function App() {
   const combinedUnavailableBerthIds = Array.from(new Set([...pendingUnavailableBerthIds, ...filteredOutBerthIds]));
   
   // --- Valid Berths for Form ---
-  const getValidBerthsForForm = (vesselLength: number) => {
-    const requiredLength = vesselLength > 0 ? vesselLength + BUFFER_FT : 0;
-    const valid = BERTHS.filter(berth => {
-      if (berth.length < requiredLength) return false;
-      return !bookings.some(b =>
-        b.berthId === berth.id &&
-        b.startDate <= endDate &&
-        b.endDate >= startDate
-      );
-    });
-    return valid.sort((a, b) => a.length - b.length);
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
@@ -228,7 +216,8 @@ function App() {
         endDate={endDate}
         filterLength={filterLength}
         filterBerthId={filterBerthId}
-        validBerths={getValidBerthsForForm(parseInt(filterLength) || 0)} 
+        berths={BERTHS}
+        bookings={bookings} 
       />
     </div>
   );

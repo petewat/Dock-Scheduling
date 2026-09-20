@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Berth } from '../types';
+import type { Berth, Booking } from '../types';
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -9,8 +9,11 @@ interface BookingModalProps {
   endDate: string;
   filterLength: string;
   filterBerthId: string;
-  validBerths: Berth[];
+  berths: Berth[];
+  bookings: Booking[];
 }
+
+const BUFFER_FT = 15;
 
 export function BookingModal({
   isOpen,
@@ -20,7 +23,8 @@ export function BookingModal({
   endDate,
   filterLength,
   filterBerthId,
-  validBerths
+  berths,
+  bookings
 }: BookingModalProps) {
   const [vesselName, setVesselName] = useState('');
   const [vesselLength, setVesselLength] = useState<string>(filterLength);
@@ -35,6 +39,23 @@ export function BookingModal({
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Compute validBerths internally based on the local vesselLength state
+  const validBerths = (() => {
+    const requiredLength = (!isEvent && vesselLength && parseInt(vesselLength) > 0) 
+      ? parseInt(vesselLength) + BUFFER_FT 
+      : 0;
+
+    const valid = berths.filter(berth => {
+      if (berth.length < requiredLength) return false;
+      return !bookings.some(b =>
+        b.berthId === berth.id &&
+        b.startDate <= endDate &&
+        b.endDate >= startDate
+      );
+    });
+    return valid.sort((a, b) => a.length - b.length);
+  })();
+
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -47,12 +68,16 @@ export function BookingModal({
       setCellNumber('');
       setEmail('');
       setExtraNote('');
-      if (filterBerthId) setSelectedBerth(filterBerthId);
-      else if (validBerths.length > 0) setSelectedBerth(validBerths[0].id);
+      if (filterBerthId) {
+        setSelectedBerth(filterBerthId);
+      } else {
+        // We defer to the next effect to pick the best berth once validBerths runs
+        setSelectedBerth('');
+      }
     }
-  }, [isOpen, filterLength, filterBerthId, validBerths]);
+  }, [isOpen, filterLength, filterBerthId]);
 
-  // Keep selected berth valid
+  // Keep selected berth valid when validBerths changes
   useEffect(() => {
     if (validBerths.length > 0) {
       const isCurrentValid = validBerths.find(b => b.id === selectedBerth);
@@ -62,7 +87,7 @@ export function BookingModal({
     } else {
       setSelectedBerth('');
     }
-  }, [vesselLength, validBerths, selectedBerth]);
+  }, [vesselLength, isEvent, startDate, endDate, selectedBerth, validBerths]);
 
   if (!isOpen) return null;
 
@@ -157,7 +182,6 @@ export function BookingModal({
                   value={vesselLength}
                   onChange={(e) => {
                     setVesselLength(e.target.value);
-                    setSelectedBerth('');
                   }}
                   className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500"
                   placeholder="100"
