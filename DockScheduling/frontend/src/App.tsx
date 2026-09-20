@@ -113,6 +113,14 @@ function App() {
     return filtered;
   })();
 
+  const berthsFilteredBySize = (() => {
+    if (filterLength) {
+      const requiredLength = parseInt(filterLength) + BUFFER_FT;
+      return BERTHS.filter(b => b.length >= requiredLength);
+    }
+    return BERTHS;
+  })();
+
   // --- Unavailable Berths during Pending Selection ---
   const pendingUnavailableBerthIds = (() => {
     if (!selectionStart || !hoverDay) return [];
@@ -128,6 +136,10 @@ function App() {
       );
     }).map(b => b.id);
   })();
+
+  // Map should gray out piers that have active overlaps OR are filtered out
+  const filteredOutBerthIds = BERTHS.filter(b => !activeBerths.find(a => a.id === b.id)).map(b => b.id);
+  const combinedUnavailableBerthIds = Array.from(new Set([...pendingUnavailableBerthIds, ...filteredOutBerthIds]));
   
   // --- Valid Berths for Form ---
   const getValidBerthsForForm = (vesselLength: number) => {
@@ -190,7 +202,7 @@ function App() {
             onDayClick={handleDayClick}
             onHoverDay={setHoverDay}
             todayString={todayString}
-            berths={BERTHS}
+            berths={berthsFilteredBySize}
             filterBerthId={filterBerthId}
             onFilterBerthIdChange={setFilterBerthId}
             filterLength={filterLength}
@@ -200,7 +212,7 @@ function App() {
 
         <BerthMap 
           berths={BERTHS} 
-          unavailableBerthIds={pendingUnavailableBerthIds} 
+          unavailableBerthIds={combinedUnavailableBerthIds} 
         />
       </main>
 

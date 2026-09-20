@@ -72,6 +72,11 @@ export function BookingModal({
       return;
     }
     
+    if (!isEvent && (!vesselLength || parseInt(vesselLength) <= 0)) {
+      alert("Length is mandatory for standard vessel bookings.");
+      return;
+    }
+    
     setIsSubmitting(true);
     try {
       await onConfirm({
@@ -146,7 +151,7 @@ export function BookingModal({
 
             {!isEvent && (
               <div className="sm:w-24">
-                <label className="block text-sm text-gray-600 mb-1">Length (ft)</label>
+                <label className="block text-sm text-gray-600 mb-1">Length (ft) <span className="text-red-500">*</span></label>
                 <input
                   type="number"
                   value={vesselLength}
@@ -234,7 +239,7 @@ export function BookingModal({
           </button>
           <button
             onClick={handleSubmit}
-            disabled={validBerths.length === 0 || !vesselName || isSubmitting}
+            disabled={validBerths.length === 0 || !vesselName || (!isEvent && (!vesselLength || parseInt(vesselLength) <= 0)) || isSubmitting}
             className="px-4 py-2 text-sm sm:text-base bg-blue-600 text-white hover:bg-blue-700 rounded shadow font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Booking...' : 'Confirm Booking'}
