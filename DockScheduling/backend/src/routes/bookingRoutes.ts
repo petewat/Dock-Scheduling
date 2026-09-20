@@ -30,7 +30,10 @@ export const bookingRoutes = (db: Pool) => {
      */
     router.post('/auto-assign', async (req, res) => {
         try {
-            const { vesselName, vesselLength, startDate, endDate, overrideWarning, targetBerthId } = req.body;
+            const { 
+                vesselName, vesselLength, startDate, endDate, overrideWarning, targetBerthId,
+                companyName, contactName, workNumber, cellNumber, email, extraNote 
+            } = req.body;
             
             // Basic validation
             if (!vesselName || (!vesselLength && vesselLength !== 0) || !startDate || !endDate) {
@@ -44,7 +47,8 @@ export const bookingRoutes = (db: Pool) => {
                 endDate, 
                 overrideWarning === true,
                 15, // buffer
-                targetBerthId
+                targetBerthId,
+                { companyName, contactName, workNumber, cellNumber, email, extraNote }
             );
 
             // If the service caught an overlapping name and needs user confirmation

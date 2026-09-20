@@ -30,7 +30,15 @@ export class BookingService {
         endDate: string, 
         overrideWarning: boolean = false,
         buffer: number = 15,
-        targetBerthId?: string
+        targetBerthId?: string,
+        extraDetails?: {
+            companyName?: string,
+            contactName?: string,
+            workNumber?: string,
+            cellNumber?: string,
+            email?: string,
+            extraNote?: string
+        }
     ) {
         const client = await this.db.connect();
         
@@ -109,10 +117,21 @@ export class BookingService {
             
             // Step 4: Create the reservation
             const insertQuery = `
-                INSERT INTO reservations (berth_id, vessel_id, start_date, end_date)
-                VALUES ($1, $2, $3, $4) RETURNING *
+                INSERT INTO reservations (
+                    berth_id, vessel_id, start_date, end_date, 
+                    company_name, contact_name, work_number, cell_number, email, extra_note
+                )
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
             `;
-            const result = await client.query(insertQuery, [bestFit.id, vesselId, startDate, endDate]);
+            const result = await client.query(insertQuery, [
+                bestFit.id, vesselId, startDate, endDate,
+                extraDetails?.companyName || null,
+                extraDetails?.contactName || null,
+                extraDetails?.workNumber || null,
+                extraDetails?.cellNumber || null,
+                extraDetails?.email || null,
+                extraDetails?.extraNote || null
+            ]);
             
             await client.query('COMMIT');
             

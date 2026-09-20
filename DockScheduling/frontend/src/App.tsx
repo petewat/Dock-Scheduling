@@ -68,6 +68,12 @@ function App() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [isEvent, setIsEvent] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [workNumber, setWorkNumber] = useState('');
+  const [cellNumber, setCellNumber] = useState('');
+  const [email, setEmail] = useState('');
+  const [extraNote, setExtraNote] = useState('');
 
   // Calendar Controls
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
@@ -86,6 +92,12 @@ function App() {
       setVesselName('');
       setVesselLength(filterLength);
       setIsEvent(false);
+      setCompanyName('');
+      setContactName('');
+      setWorkNumber('');
+      setCellNumber('');
+      setEmail('');
+      setExtraNote('');
 
       if (filterBerthId) setSelectedBerth(filterBerthId);
       else setSelectedBerth('');
@@ -670,6 +682,38 @@ function App() {
                 </div>
               </div>
 
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Company Name <span className="text-red-500">*</span></label>
+                  <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. Ocean Cargo Ltd." />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Contact Name <span className="text-gray-400 text-xs font-normal">(Optional)</span></label>
+                  <input type="text" value={contactName} onChange={e => setContactName(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. Jane Doe" />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Work Number <span className="text-red-500">*</span></label>
+                  <input type="tel" value={workNumber} onChange={e => setWorkNumber(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. 555-123-4567" />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-sm text-gray-600 mb-1">Cell Number <span className="text-gray-400 text-xs font-normal">(Optional)</span></label>
+                  <input type="tel" value={cellNumber} onChange={e => setCellNumber(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. 555-987-6543" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Email <span className="text-red-500">*</span></label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" placeholder="e.g. info@company.com" />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Extra Note <span className="text-gray-400 text-xs font-normal">(Optional)</span></label>
+                <textarea value={extraNote} onChange={e => setExtraNote(e.target.value)} className="w-full border rounded p-2 focus:ring-2 focus:ring-blue-500" rows={2} placeholder="Any special requirements..." />
+              </div>
+
               <hr className="my-4" />
 
               <div className="bg-blue-50 p-3 sm:p-4 rounded border border-blue-100">
@@ -710,13 +754,24 @@ function App() {
                 <button
                   onClick={async () => {
                     try {
+                      if (!vesselName || !companyName || !workNumber || !email) {
+                        alert("Please fill in all mandatory fields (Name, Company Name, Work Number, and Email).");
+                        return;
+                      }
+
                       const payload = {
                         vesselName: vesselName,
                         vesselLength: isEvent ? 0 : parseInt(vesselLength) || 0,
                         startDate: startDate,
                         endDate: endDate,
                         overrideWarning: false,
-                        targetBerthId: selectedBerth
+                        targetBerthId: selectedBerth,
+                        companyName,
+                        contactName,
+                        workNumber,
+                        cellNumber,
+                        email,
+                        extraNote
                       };
 
                       const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
