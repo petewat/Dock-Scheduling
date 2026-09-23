@@ -147,7 +147,7 @@ function App() {
     <div className="min-h-screen bg-gray-50 flex flex-col relative">
       <header className="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center relative z-0">
         <div>
-          <h1 className="text-lg md:text-xl font-bold">Harborview Dock Schedule</h1>
+          <h1 className="text-lg md:text-xl font-bold">Dock Schedule</h1>
         </div>
       </header>
 
